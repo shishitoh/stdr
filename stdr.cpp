@@ -6,12 +6,12 @@
 #include <unistd.h>
 
 constexpr std::size_t buf_size = 8*1024*1024; // 1MB
-constexpr long INF = -1; // 適当な負の値
 
 int main(int argc, char *argv[]) {
 
-    long loop_count = INF;
+    long loop_count = 0;
     bool wait = false;
+    bool loop_inf = true;
     int c;
 
     while ((c=getopt(argc, argv, "w::")) != -1) {
@@ -33,10 +33,11 @@ int main(int argc, char *argv[]) {
             write(2, argv[optind], strlen(argv[optind]));
             return 1;
         }
+        loop_inf = false;
         ++optind;
     }
 
-    std::vector<std::shared_ptr<char>> buffer{0};
+    std::vector<std::unique_ptr<char[]>> buffer{};
     buffer.emplace_back(new char[buf_size]);
 
     int offset = 0;
@@ -69,16 +70,25 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (!wait && (loop_count > 0)) {
+    if (!wait) {
         --loop_count;
     }
 
     // stdout
-    for (long i = 0; loop_count == INF || i < loop_count; ++i) {
-        for (int j = 0; static_cast<unsigned long>(j+1) < buffer.size(); ++j) {
-            write(1, buffer[j].get(), buf_size);
+    if (loop_inf) {
+        while (true) {
+            for (std::size_t j = 0; j+1 < buffer.size(); ++j) {
+                write(1, buffer[j].get(), buf_size);
+            }
+            write(1, buffer.back().get(), last_size);
         }
-        write(1, buffer.back().get(), last_size);
+    } else {
+        for (long i = 0; i < loop_count; ++i) {
+            for (std::size_t j = 0; j+1 < buffer.size(); ++j) {
+                write(1, buffer[j].get(), buf_size);
+            }
+            write(1, buffer.back().get(), last_size);
+        }
     }
 }
 
