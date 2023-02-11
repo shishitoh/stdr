@@ -27,23 +27,27 @@ fuga
 ```
 
 ```
-$ cat foo | stdr 3
+$ cat -E | stdr 3
 1
-1
+1$
 2
-2
+2$
 (ctrl-d)
-1
-2
+1$
+2$
+1$
+2$
 ```
 
 ```
-$ cat foo | stdr 2 -w
+$ cat -E | stdr 3 -w
 1
 2
 (ctrl-d)
-1
-2
-1
-2
+1$
+2$
+1$
+2$
+1$
+2$
 ```
